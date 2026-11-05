@@ -1,60 +1,49 @@
-﻿using System;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading;
+﻿
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Support.UI;
 using Xunit;
+using System.Threading;
 
 namespace DanmarksRadioUnitTest
 {
-    public class UnitTest1 : IDisposable
+    public class UnitTest1
     {
-        private readonly IWebDriver _driver;
-
-        public UnitTest1()
-        {
-            //string driverDirectory = @"C:\webDriver";
-            _driver = new ChromeDriver(/*driverDirectory*/);
-
-            Thread.Sleep(2000);
-        }
-
         [Fact]
-        public void AddRecord_ShowsInTable()
+        public void TestAddRecord()
         {
-            string url = "file:///c%3A/Users/johnb/Downloads/DanmarksRadioFrontend-main/DanmarksRadioFrontend/frontend/index.html";
-            _driver.Navigate().GoToUrl(url);
+            using IWebDriver driver = new ChromeDriver();
+
+            driver.Navigate().GoToUrl("file:///c%3A/Users/johnb/Downloads/DanmarksRadioFrontend-main/DanmarksRadioFrontend/frontend/index.html");
 
             Thread.Sleep(2000);
 
-            _driver.FindElement(
-                By.CssSelector("input[placeholder='Title']")
-            ).SendKeys("Test Song");
-
-            _driver.FindElement(
-                By.CssSelector("input[placeholder='Artist']")
-            ).SendKeys("Test Artist");
-
-            _driver.FindElement(
-                By.XPath("//button[normalize-space(.)='Add Record']")
-            ).Click();
+            // Click Get All Records
+            driver.FindElement(By.Id("getAllButton")).Click();
 
             Thread.Sleep(2000);
 
-            _driver.FindElement(
-                By.XPath("//button[normalize-space(.)='Get All Records']")
-            ).Click();
+            // Check that there are 4 records
+            Assert.Equal(4,
+                driver.FindElements(By.CssSelector("#recordlist li")).Count);
 
-            Thread.Sleep(5000);
+            // Add a new record
+            driver.FindElement(By.Id("addTitleInput")).SendKeys("XUnitTest");
+            driver.FindElement(By.Id("addArtistInput")).SendKeys("Test Artist");
+            driver.FindElement(By.Id("addPublicationYearInput")).SendKeys("2018");
+            driver.FindElement(By.Id("addDurationInput")).SendKeys("180");
 
-            Assert.Contains("Test Song",
-                _driver.FindElement(By.TagName("tbody")).Text);
-        }
+            // Click Add
+            driver.FindElement(By.Id("addButton")).Click();
 
-        public void Dispose()
-        {
-            _driver.Dispose();
+            Thread.Sleep(2000);
+
+            // Check that there are now 5 records
+            Assert.Equal(5,
+                driver.FindElements(By.CssSelector("#recordlist li")).Count);
+
+            // Check that XUnitTest was added
+            Assert.Contains("XUnitTest",
+                driver.FindElement(By.Id("recordlist")).Text);
         }
     }
 }
