@@ -1,60 +1,59 @@
-﻿using System;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading;
-using OpenQA.Selenium;
+﻿using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
-using Xunit;
+using System.Collections.ObjectModel;
 
 namespace DanmarksRadioUnitTest
 {
     public class UnitTest1 : IDisposable
     {
-        private readonly IWebDriver _driver;
+        private static readonly string DriverDirectory = "C:\\WebDriver";
+        // Download drivers to your driver folder.
+        // Driver version must match your browser version.
+        // http://chromedriver.chromium.org/downloads
+        private static IWebDriver _driver;
 
         public UnitTest1()
         {
-            //string driverDirectory = @"C:\webDriver";
-            _driver = new ChromeDriver(/*driverDirectory*/);
-
-            Thread.Sleep(2000);
+            //string driverDirectory = @"C:\WebDriver";
+            _driver = new ChromeDriver(DriverDirectory);
         }
 
         [Fact]
-        public void AddRecord_ShowsInTable()
+        public void Test1()
         {
-            string url = "file:///c%3A/Users/johnb/Downloads/DanmarksRadioFrontend-main/DanmarksRadioFrontend/frontend/index.html";
-            _driver.Navigate().GoToUrl(url);
+            _driver.Navigate().GoToUrl("file:///C:/Users/nadia/Documents/Programmering/Programmering3/JavaScript/DanmarksRadioFront/index.html");
+
+            Assert.Equal("Danmarks Radio", _driver.Title);
+
+            IWebElement buttonElement = _driver.FindElement(By.Id("getAllButton"));
+            buttonElement.Click();
+
+            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
+            IWebElement recordList = wait.Until(d => d.FindElement(By.Id("recordlist")));
+            Assert.Contains("Bohemian Rhapsody", recordList.Text);
+
+            ReadOnlyCollection<IWebElement> listElements = recordList.FindElements(By.TagName("li"));
+            Assert.Equal(4, listElements.Count);
+            Assert.Contains("Bohemian Rhapsody", listElements[0].Text);
+
+            _driver.FindElement(By.Id("addTitleInput")).SendKeys("Audio");
+            _driver.FindElement(By.Id("addArtistInput")).SendKeys("LSD");
+            _driver.FindElement(By.Id("addYearInput")).SendKeys("2018");
+            _driver.FindElement(By.Id("addButton")).Click();
+
+            wait.Until(d => d.FindElement(By.Id("recordlist")).Text.Contains("Audio"));
+
+            ReadOnlyCollection<IWebElement> updatedElements = _driver.FindElements(By.TagName("li"));
+            Assert.Equal(5, updatedElements.Count);
 
             Thread.Sleep(2000);
-
-            _driver.FindElement(
-                By.CssSelector("input[placeholder='Title']")
-            ).SendKeys("Test Song");
-
-            _driver.FindElement(
-                By.CssSelector("input[placeholder='Artist']")
-            ).SendKeys("Test Artist");
-
-            _driver.FindElement(
-                By.XPath("//button[normalize-space(.)='Add Record']")
-            ).Click();
-
-            Thread.Sleep(2000);
-
-            _driver.FindElement(
-                By.XPath("//button[normalize-space(.)='Get All Records']")
-            ).Click();
-
-            Thread.Sleep(5000);
-
-            Assert.Contains("Test Song",
-                _driver.FindElement(By.TagName("tbody")).Text);
         }
 
         public void Dispose()
         {
             _driver.Dispose();
         }
+
     }
 }
